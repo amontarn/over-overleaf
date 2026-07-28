@@ -9,10 +9,13 @@ services:
       args:
         # The published base image currently embeds an obsolete Corepack. The
         # complete CE image has the Node/Corepack versions required by this
-        # checkout and is used as the reproducible local build base. Pinned by
-        # digest so rebuilds are reproducible; refresh the digest deliberately
-        # with: docker buildx imagetools inspect sharelatex/sharelatex:latest
-        OVERLEAF_BASE_TAG: sharelatex/sharelatex@sha256:cfdeecb4e55a7ae76f0244b86d1b896580bc7137b82733b886a97575fba19d43
+        # checkout and is used as the local build base.
+        # NOTE: sharelatex/sharelatex is published for linux/amd64 only (no
+        # arm64), so it is NOT pinned by digest: a digest forces BuildKit to
+        # match the host platform and fails on Apple Silicon. On arm64 it runs
+        # under emulation. Pin to a version tag once upstream ships the arch you
+        # deploy on.
+        OVERLEAF_BASE_TAG: sharelatex/sharelatex:latest
     image: over-overleaf-sharelatex:local
     container_name: sharelatex
     # Resource ceilings so a single runaway compile cannot exhaust the host.
@@ -55,9 +58,12 @@ services:
       OVERLEAF_SESSION_SECRET: "${OVERLEAF_SESSION_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
       # Distinct internal secret for web<->git-bridge service calls.
       OVERLEAF_GIT_BRIDGE_INTERNAL_SECRET: "${OVERLEAF_GIT_BRIDGE_INTERNAL_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
-      # Set to "true" when served over HTTPS so the session cookie carries the
-      # Secure attribute. Leave empty for plain-HTTP local development.
-      OVERLEAF_SECURE_COOKIE: "${OVERLEAF_SECURE_COOKIE:-}"
+      # Session cookie Secure attribute. Leave this commented out for plain-HTTP
+      # local development. Do NOT pass an empty value: on the published base
+      # image `secureCookie` is `OVERLEAF_SECURE_COOKIE != null`, so any value
+      # (including "") enables Secure and breaks login over plain HTTP.
+      # Uncomment only when served over HTTPS:
+      # OVERLEAF_SECURE_COOKIE: "true"
 
       OVERLEAF_GIT_BRIDGE_ENABLED: "${OVERLEAF_GIT_BRIDGE_ENABLED:-true}"
       OVERLEAF_GIT_BRIDGE_PUBLIC_URL: "${OVERLEAF_GIT_BRIDGE_PUBLIC_URL:-http://localhost:8000}"

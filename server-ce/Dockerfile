@@ -6,6 +6,12 @@
 ARG OVERLEAF_BASE_TAG=sharelatex/sharelatex-base:latest
 FROM $OVERLEAF_BASE_TAG
 
+# Install the full TeX Live scheme so every CTAN package is available at
+# compile time (the base image ships a minimal scheme, which breaks projects
+# that use less common packages). Kept before the application layers so that
+# code-only rebuilds reuse this cached layer.
+RUN tlmgr install scheme-full && tlmgr path add
+
 WORKDIR /overleaf
 
 # Add required source files for yarn install
