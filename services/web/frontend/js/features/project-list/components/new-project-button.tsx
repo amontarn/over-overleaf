@@ -59,6 +59,7 @@ function NewProjectButton({
 }: NewProjectButtonProps) {
   const { t } = useTranslation()
   const { templateLinks } = getMeta('ol-ExposedSettings')
+  const { gitLabImportEnabled } = getMeta('ol-ExposedSettings')
   const [modal, setModal] =
     useState<Nullable<NewProjectButtonModalVariant>>(null)
   const portalTemplates = getMeta('ol-portalTemplates') || []
@@ -270,6 +271,20 @@ function NewProjectButton({
               />
             )}
           </li>
+          {gitLabImportEnabled && (
+            <li role="none">
+              <DropdownItem
+                onClick={event =>
+                  handleModalMenuClick(event, {
+                    modalVariant: 'import_from_gitlab',
+                    dropdownMenuEvent: 'import-from-gitlab',
+                  })
+                }
+              >
+                Importer depuis GitLab
+              </DropdownItem>
+            </li>
+          )}
           {portalTemplates.length > 0 ? (
             <>
               <DropdownDivider />

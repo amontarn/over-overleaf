@@ -8,7 +8,6 @@ import OLDropdownMenuItem from '@/shared/components/ol/ol-dropdown-menu-item'
 import MaterialIcon from '@/shared/components/material-icon'
 import classNames from 'classnames'
 import { useTrackChangesStateActionsContext } from '../context/track-changes-state-context'
-import { useUserContext } from '@/shared/context/user-context'
 import { useTranslation } from 'react-i18next'
 import { usePermissionsContext } from '@/features/ide-react/context/permissions-context'
 import usePersistedState from '@/shared/hooks/use-persisted-state'
@@ -22,8 +21,7 @@ import { useFeatureFlag } from '@/shared/context/split-test-context'
 
 function ReviewModeDropdownItems() {
   const { t } = useTranslation()
-  const user = useUserContext()
-  const { saveTrackChangesForCurrentUser, saveTrackChanges } =
+  const { saveTrackChangesForCurrentUser } =
     useTrackChangesStateActionsContext()
   const mode = useTrackingChangesMode()
   const { permissionsLevel } = useIdeReactContext()
@@ -47,11 +45,7 @@ function ReviewModeDropdownItems() {
             previousMode: mode,
             newMode: 'edit',
           })
-          if (user?.id) {
-            saveTrackChangesForCurrentUser(false)
-          } else {
-            saveTrackChanges({ on_for_guests: false })
-          }
+          saveTrackChangesForCurrentUser(false)
           view.focus()
         }}
         description={t('edit_content_directly')}
@@ -78,11 +72,7 @@ function ReviewModeDropdownItems() {
               previousMode: mode,
               newMode: 'review',
             })
-            if (user?.id) {
-              saveTrackChangesForCurrentUser(true)
-            } else {
-              saveTrackChanges({ on_for_guests: true })
-            }
+            saveTrackChangesForCurrentUser(true)
             view.focus()
           }
         }}

@@ -31,6 +31,7 @@ RUN --mount=type=cache,target=/root/.cache \
 # Add the actual source files
 # ---------------------------
 COPY --parents libraries/ services/ tools/migrations/ /overleaf/
+COPY doc/over-overleaf-logo.png /overleaf/services/web/public/img/over-overleaf-logo.png
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/root/.yarn/berry/cache,id=server-ce-yarn-cache \
     --mount=type=cache,target=/usr/local/share/.cache/yarn,id=server-ce-yarn-fallback-cache \

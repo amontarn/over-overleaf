@@ -6,11 +6,19 @@ import {
 import { RailHelpContactUsModal } from './contact-us'
 import { RailHelpShowHotkeysModal } from './keyboard-shortcuts'
 import DictionarySettingsModal from '@/features/settings/components/editor-settings/dictionary-settings-modal'
+import { AboutOverOverleafModal } from '@/shared/components/footer/about-over-overleaf'
 import importOverleafModules from '../../../../../macros/import-overleaf-module.macro'
 
 type RailModalEntry = {
   key: RailModalKey
   modalComponentFunction: FC<{ show: boolean }>
+}
+
+const RailAboutOverOverleafModal: FC<{ show: boolean }> = ({ show }) => {
+  const { setActiveModal } = useRailContext()
+  return (
+    <AboutOverOverleafModal show={show} onHide={() => setActiveModal(null)} />
+  )
 }
 
 const moduleRailModals = (
@@ -32,6 +40,10 @@ const RAIL_MODALS: RailModalEntry[] = [
   {
     key: 'dictionary',
     modalComponentFunction: DictionarySettingsModal,
+  },
+  {
+    key: 'about-over-overleaf',
+    modalComponentFunction: RailAboutOverOverleafModal,
   },
   ...moduleRailModals,
 ]

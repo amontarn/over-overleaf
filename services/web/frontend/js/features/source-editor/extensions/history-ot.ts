@@ -22,13 +22,16 @@ import {
   TrackedDeletes,
   trackedDeletesFromState,
 } from '@/features/source-editor/utils/tracked-deletes'
+import {
+  createDeletedTextElement,
+  deletedTextTheme,
+} from '@/features/source-editor/extensions/changes/deleted-text'
 
 export const historyOT = (currentDoc: DocumentContainer) => {
+  const snapshot = currentDoc.historyOTShareDoc.snapshot
   const trackedChanges =
-    currentDoc.historyOTShareDoc.snapshot.getTrackedChanges() ??
-    new TrackedChangeList([])
-  const comments =
-    currentDoc.historyOTShareDoc.snapshot.getComments() ?? new CommentList([])
+    snapshot.getTrackedChanges() ?? new TrackedChangeList([])
+  const comments = snapshot.getComments() ?? new CommentList([])
   return [
     updateSender,
     trackChangesUserIdState,
@@ -36,7 +39,11 @@ export const historyOT = (currentDoc: DocumentContainer) => {
     rangesState.init(() => ({
       trackedChanges,
       comments,
-      decorations: buildRangesDecorations({ trackedChanges, comments }),
+      decorations: buildRangesDecorations({
+        trackedChanges,
+        comments,
+        content: snapshot.getContent(),
+      }),
     })),
     trackedChangesTheme,
   ]
@@ -74,30 +81,7 @@ const trackedChangesTheme = EditorView.baseTheme({
   '.ol-cm-change-focus': {
     padding: 'var(--half-leading, 0) 0',
   },
-  '&light .ol-cm-change-d': {
-    borderLeft: '2px dotted #c5060b',
-    marginLeft: '-1px',
-  },
-  '&dark .ol-cm-change-d': {
-    borderLeft: '2px dotted #c5060b',
-    marginLeft: '-1px',
-  },
-  '&light .ol-cm-change-d-highlight': {
-    borderLeft: '3px solid #c5060b',
-    marginLeft: '-2px',
-  },
-  '&dark .ol-cm-change-d-highlight': {
-    borderLeft: '3px solid #c5060b',
-    marginLeft: '-2px',
-  },
-  '&light .ol-cm-change-d-focus': {
-    borderLeft: '3px solid #B83A33',
-    marginLeft: '-2px',
-  },
-  '&dark .ol-cm-change-d-focus': {
-    borderLeft: '3px solid #B83A33',
-    marginLeft: '-2px',
-  },
+  ...deletedTextTheme,
 })
 
 export const rangesUpdatedEffect = StateEffect.define()
@@ -105,9 +89,11 @@ export const rangesUpdatedEffect = StateEffect.define()
 const buildRangesDecorations = ({
   trackedChanges,
   comments,
+  content,
 }: {
   trackedChanges: TrackedChangeList
   comments: CommentList
+  content: string
 }) => {
   if (trackedChanges.length === 0 && comments.length === 0) {
     return Decoration.none
@@ -127,17 +113,19 @@ const buildRangesDecorations = ({
             tracking: change.tracking,
             rangeType: 'trackedChange',
             change,
-          }).range(from, to)
+          }).range(from, to),
         )
       }
     } else {
       decorations.push(
         Decoration.widget({
-          widget: new ChangeDeletedWidget(),
+          widget: new ChangeDeletedWidget(
+            content.slice(change.range.pos, change.range.end),
+          ),
           side: 1,
           rangeType: 'trackedChange',
           change,
-        }).range(from)
+        }).range(from),
       )
     }
   }
@@ -153,8 +141,8 @@ const buildRangesDecorations = ({
             comment,
           }).range(
             trackedDeletes.toCodeMirror(range.pos),
-            trackedDeletes.toCodeMirror(range.end)
-          )
+            trackedDeletes.toCodeMirror(range.end),
+          ),
         )
       }
     }
@@ -164,15 +152,16 @@ const buildRangesDecorations = ({
 }
 
 class ChangeDeletedWidget extends WidgetType {
-  toDOM() {
-    const widget = document.createElement('span')
-    widget.classList.add('ol-cm-change')
-    widget.classList.add('ol-cm-change-d')
-    return widget
+  constructor(private readonly deletedText: string) {
+    super()
   }
 
-  eq() {
-    return true
+  toDOM() {
+    return createDeletedTextElement(this.deletedText)
+  }
+
+  eq(other: ChangeDeletedWidget) {
+    return other.deletedText === this.deletedText
   }
 }
 
@@ -184,7 +173,11 @@ export const rangesState = StateField.define<{
   create() {
     const trackedChanges = new TrackedChangeList([])
     const comments = new CommentList([])
-    const decorations = buildRangesDecorations({ trackedChanges, comments })
+    const decorations = buildRangesDecorations({
+      trackedChanges,
+      comments,
+      content: '',
+    })
     return { trackedChanges, comments, decorations }
   },
 
@@ -195,7 +188,11 @@ export const rangesState = StateField.define<{
     if (transaction.docChanged) {
       const trackedChanges = snapshot.getTrackedChanges()
       const comments = snapshot.getComments()
-      const decorations = buildRangesDecorations({ trackedChanges, comments })
+      const decorations = buildRangesDecorations({
+        trackedChanges,
+        comments,
+        content: snapshot.getContent(),
+      })
       value = { trackedChanges, comments, decorations }
     } else {
       for (const effect of transaction.effects) {
@@ -205,6 +202,7 @@ export const rangesState = StateField.define<{
           const decorations = buildRangesDecorations({
             trackedChanges,
             comments,
+            content: snapshot.getContent(),
           })
           value = { trackedChanges, comments, decorations }
           shareDoc.emit('ranges:dirty')
@@ -216,7 +214,7 @@ export const rangesState = StateField.define<{
   },
 
   provide(field) {
-    return EditorView.decorations.from(field, value => value.decorations)
+    return EditorView.decorations.from(field, (value) => value.decorations)
   },
 })
 
@@ -243,7 +241,7 @@ const trackChangesUserIdState = StateField.define<string | null>({
   },
 })
 
-const updateSender = EditorState.transactionExtender.of(tr => {
+const updateSender = EditorState.transactionExtender.of((tr) => {
   if (!tr.docChanged || tr.annotation(Transaction.remote)) {
     return {}
   }
@@ -252,7 +250,7 @@ const updateSender = EditorState.transactionExtender.of(tr => {
   const trackedDeletes = trackedDeletesFromState(tr.startState)
   const startDoc = tr.startState.doc
   const opBuilder = new OperationBuilder(
-    trackedDeletes.toSnapshot(startDoc.length)
+    trackedDeletes.toSnapshot(startDoc.length),
   )
 
   if (trackingUserId == null) {
@@ -282,7 +280,7 @@ const updateSender = EditorState.transactionExtender.of(tr => {
           pos,
           inserted.toString(),
           trackingUserId,
-          timestamp
+          timestamp,
         )
       }
 
@@ -365,7 +363,7 @@ class OperationBuilder {
       this.pos = pos
     } else if (pos < this.pos) {
       throw Error(
-        `Out of order: position ${pos} comes before current position: ${this.pos}`
+        `Out of order: position ${pos} comes before current position: ${this.pos}`,
       )
     }
   }

@@ -11,7 +11,6 @@ export TEX_LIVE_DOCKER_IMAGE ?= us-east1-docker.pkg.dev/overleaf-ops/ol-docker/t
 export ALL_TEX_LIVE_DOCKER_IMAGES ?= us-east1-docker.pkg.dev/overleaf-ops/ol-docker/texlive-full:2023.1,us-east1-docker.pkg.dev/overleaf-ops/ol-docker/texlive-full:2022.1
 export IMAGE_TAG_CE ?= sharelatex/sharelatex:main
 export IMAGE_TAG_PRO ?= us-east1-docker.pkg.dev/overleaf-ops/ol-docker/pro:main
-export IMAGE_TAG_GIT_BRIDGE ?= us-east1-docker.pkg.dev/overleaf-ops/ol-docker/git-bridge:main
 export CYPRESS_SHARD ?=
 export COMPOSE_PROJECT_NAME ?= test
 export USER_UID=$(shell id -u)
@@ -25,7 +24,6 @@ print-debug-logs:
 	-docker compose logs --timestamps --tail=100 mailtrap
 	-docker compose logs --timestamps --tail=100 saml
 	-docker compose logs --timestamps --tail=100 ldap
-	-docker compose logs --timestamps --tail=100 git-bridge
 	-docker compose logs --timestamps --tail=100 host-admin
 	-docker compose logs --timestamps sharelatex
 	-docker compose exec sharelatex bash -c 'tail -n100 /var/log/overleaf/*.log'

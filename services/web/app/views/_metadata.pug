@@ -39,12 +39,12 @@ else if metadata && metadata.image_src
 	meta(name='image' content=metadata.image_src)
 else if settings.overleaf
 	//- the default image for Overleaf
-	meta(itemprop='image' content=buildImgPath('ol-brand/overleaf_og_logo.png'))
-	meta(name='image' content=buildImgPath('ol-brand/overleaf_og_logo.png'))
+	meta(itemprop='image' content=buildImgPath('over-overleaf-logo.png'))
+	meta(name='image' content=buildImgPath('over-overleaf-logo.png'))
 else
 	//- the default image for Overleaf Community Edition/Server Pro
-	meta(itemprop='image' content=buildBaseAssetPath() + 'apple-touch-icon.png')
-	meta(name='image' content=buildBaseAssetPath() + 'apple-touch-icon.png')
+	meta(itemprop='image' content=buildImgPath('over-overleaf-logo.png'))
+	meta(name='image' content=buildImgPath('over-overleaf-logo.png'))
 
 //- Keywords
 if metadata && metadata.keywords
@@ -75,13 +75,13 @@ else if settings.overleaf
 	//- the default image for Overleaf
 	meta(
 		name='twitter:image'
-		content=buildImgPath('ol-brand/overleaf_og_logo.png')
+		content=buildImgPath('over-overleaf-logo.png')
 	)
 else
 	//- the default image for Overleaf Community Edition/Server Pro
 	meta(
 		name='twitter:image'
-		content=buildBaseAssetPath() + 'apple-touch-icon.png'
+		content=buildImgPath('over-overleaf-logo.png')
 	)
 
 //- Open Graph
@@ -101,13 +101,13 @@ else if settings.overleaf
 	//- the default image for Overleaf
 	meta(
 		property='og:image'
-		content=buildImgPath('ol-brand/overleaf_og_logo.png')
+		content=buildImgPath('over-overleaf-logo.png')
 	)
 else
 	//- the default image for Overleaf Community Edition/Server Pro
 	meta(
 		property='og:image'
-		content=buildBaseAssetPath() + 'apple-touch-icon.png'
+		content=buildImgPath('over-overleaf-logo.png')
 	)
 
 if metadata && metadata.openGraphType

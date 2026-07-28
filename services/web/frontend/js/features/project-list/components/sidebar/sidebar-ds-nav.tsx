@@ -7,6 +7,7 @@ import { usePersistedResize } from '@/shared/hooks/use-resize'
 import { useScrolled } from '@/features/project-list/components/sidebar/use-scroll'
 import { SurveyWidgetDsNav } from '@/features/project-list/components/survey-widget-ds-nav'
 import { SidebarLowerSection } from '@/shared/components/sidebar/sidebar-lower-section'
+import AboutOverOverleaf from '@/shared/components/footer/about-over-overleaf'
 import { isSplitTestEnabled } from '@/utils/splitTestUtils'
 import { DsNavPageSwitcher } from '@/shared/components/sidebar/ds-nav-page-switcher'
 import { useProjectListContext } from '@/features/project-list/context/project-list-context'
@@ -69,6 +70,9 @@ function SidebarDsNav() {
         <SidebarLowerSection showThemeToggle>
           <div className="project-list-sidebar-survey-wrapper">
             <SurveyWidgetDsNav />
+          </div>
+          <div className="project-list-sidebar-about mb-2 small">
+            <AboutOverOverleaf />
           </div>
         </SidebarLowerSection>
       </div>

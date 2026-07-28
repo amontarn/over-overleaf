@@ -28,6 +28,12 @@ footer.site-footer
 							a(href=item.url class=item.class) !{translate(item.text)}
 						else
 							| !{item.text}
+				li
+					a(
+						href='#about-over-overleaf-modal'
+						data-bs-toggle='modal'
+						data-bs-target='#about-over-overleaf-modal'
+					) About
 
 			ul.site-footer-items.col-lg-3.text-end
 				each item in nav.right_footer

@@ -25,7 +25,7 @@ export const ToolbarProjectTitle = () => {
   const { t } = useTranslation()
   const { renameProject } = useEditorContext()
   const { permissionsLevel } = useIdeReactContext()
-  const { name } = useProjectContext()
+  const { name, projectId } = useProjectContext()
   const shouldDisplaySubmitButton =
     (permissionsLevel === 'owner' || permissionsLevel === 'readAndWrite') &&
     SubmitProjectButton
@@ -96,6 +96,28 @@ export const ToolbarProjectTitle = () => {
           menuBarId="export-as-html"
         />
         <DropdownDivider />
+        {permissionsLevel && (
+          <OLDropdownMenuItem
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('ui:select-rail-tab', {
+                  detail: { tab: 'ai-assistant', open: true },
+                })
+              )
+            }}
+          >
+            AI writing assistant
+          </OLDropdownMenuItem>
+        )}
+        {permissionsLevel && (
+          <OLDropdownMenuItem
+            onClick={() => {
+              window.open(`/project/${projectId}/review/pdf`, '_blank')
+            }}
+          >
+            Annotated review PDF
+          </OLDropdownMenuItem>
+        )}
         <DuplicateProject />
         <OLDropdownMenuItem
           onClick={() => {

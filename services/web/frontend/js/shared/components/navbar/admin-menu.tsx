@@ -38,8 +38,8 @@ export default function AdminMenu({
       {canDisplayAdminMenu ? (
         <>
           <NavDropdownLinkItem href="/admin">Manage Site</NavDropdownLinkItem>
-          <NavDropdownLinkItem href="/admin/user">
-            Manage Users
+          <NavDropdownLinkItem href="/admin/community/ai">
+            AI Connector
           </NavDropdownLinkItem>
         </>
       ) : null}

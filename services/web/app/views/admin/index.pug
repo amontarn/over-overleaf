@@ -9,11 +9,13 @@ block content
 					.card
 						.card-body
 							.page-header
+								img.mb-3.d-block(src=buildImgPath('over-overleaf-logo.png') alt=settings.appName width='72' height='72')
 								h1 Admin Panel
 							.ol-tabs(data-ol-bookmarkable-tabset)
 								.nav-tabs-container
 									ul.nav.nav-tabs.align-left(role='tablist')
 										+bookmarkable-tabset-header('system-messages', 'System Messages', true)
+										+bookmarkable-tabset-header('community-features', 'Community Features')
 										+bookmarkable-tabset-header('open-sockets', 'Open Sockets')
 										+bookmarkable-tabset-header('open-close-editor', 'Open/Close Editor')
 										if hasFeature('saas')
@@ -41,6 +43,19 @@ block content
 										form(method='post' action='/admin/messages/clear')
 											input(name='_csrf' type='hidden' value=csrfToken)
 											button.btn.btn-danger(type='submit') Clear all messages
+
+									.tab-pane(role='tabpanel' id='community-features')
+										h2 Community Features
+										p Manage the additional collaborative features installed on this instance.
+										.row
+											.col-md-6.row-spaced
+												h3 User administration
+												p Create, suspend or delete users and revoke their active sessions.
+												a.btn.btn-primary(href='/admin/community/users') Manage users
+											.col-md-6.row-spaced
+												h3 AI connector
+												p Configure the OpenAI-compatible provider used by the project assistant.
+												a.btn.btn-primary(href='/admin/community/ai') Configure AI
 
 									.tab-pane(role='tabpanel' id='open-sockets')
 										.row-spaced

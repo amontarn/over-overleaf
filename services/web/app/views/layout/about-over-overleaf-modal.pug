@@ -1,0 +1,41 @@
+#about-over-overleaf-modal.modal.fade(
+	tabindex='-1'
+	aria-labelledby='about-over-overleaf-title'
+	aria-hidden='true'
+)
+	.modal-dialog.modal-lg.modal-dialog-centered
+		.modal-content
+			.modal-header
+				h2#about-over-overleaf-title.modal-title About Over-Overleaf
+				button.btn-close(
+					type='button'
+					data-bs-dismiss='modal'
+					aria-label=translate('close')
+				)
+			.modal-body
+				img.d-block.mx-auto.mb-4(
+					src=buildImgPath('over-overleaf-logo.png')
+					alt='Over-Overleaf'
+					width='112'
+					height='112'
+				)
+				p
+					| Overleaf Community Edition is an open-source collaborative LaTeX platform, developed in the official 
+					a(
+						href='https://github.com/overleaf/overleaf'
+						target='_blank'
+						rel='noopener noreferrer'
+					) overleaf/overleaf
+					|  monorepo.
+				p
+					| Over-Overleaf is an extension of that monorepo. It adds multi-user administration, track changes, Git and GitLab connectors, and a configurable AI assistant.
+				p.mb-0
+					| The source code and the history of the adaptations are available in the 
+					a(
+						href='https://github.com/amontarn/over-overleaf'
+						target='_blank'
+						rel='noopener noreferrer'
+					) amontarn/over-overleaf
+					|  repository.
+			.modal-footer
+				button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Close

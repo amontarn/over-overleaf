@@ -38,6 +38,12 @@
   }
 }
 
+.editor-floating-menu-community-ai-button {
+  gap: var(--spacing-02);
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
 .editor-floating-menu-divider {
   height: 1px;
   background-color: var(--dropdown-border-divider);

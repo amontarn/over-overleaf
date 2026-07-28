@@ -20,6 +20,7 @@ import { useLayoutContext } from '@/shared/context/layout-context'
 import { useEditorPropertiesContext } from '@/features/ide-react/context/editor-properties-context'
 import AddCommentAction from './components/add-comment-action'
 import TrackedChangesActions from './components/tracked-changes-actions'
+import AiSelectionAction from '../../../../modules/community-features/frontend/js/ai/ai-selection-action'
 
 const TOOLTIP_SHOW_DELAY = 120
 
@@ -172,6 +173,7 @@ const EditorFloatingMenuContent = memo(function EditorFloatingMenuContent() {
       })}
     >
       <AddCommentAction />
+      <AiSelectionAction />
       <TrackedChangesActions />
       {editorFloatingMenuActions.map(
         ({ import: { default: Component }, path }) => (

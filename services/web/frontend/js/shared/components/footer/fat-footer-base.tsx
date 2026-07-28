@@ -5,6 +5,7 @@ import FacebookLogo from '@/shared/svgs/facebook-logo'
 import LinkedInLogo from '@/shared/svgs/linkedin-logo'
 import XLogo from '@/shared/svgs/x-logo'
 import classNames from 'classnames'
+import AboutOverOverleaf from './about-over-overleaf'
 
 type FooterLinkProps = {
   href: string
@@ -27,14 +28,12 @@ function FatFooterBase() {
       <div className="fat-footer-base-section fat-footer-base-meta">
         <div className="fat-footer-base-item">
           <div className="fat-footer-base-copyright" translate="no">
-            © {currentYear} Overleaf
+            © {currentYear} Over-Overleaf
           </div>
           <FooterBaseLink href="/legal">
             {t('privacy_and_terms')}
           </FooterBaseLink>
-          <FooterBaseLink href="https://www.digital-science.com/security-certifications/">
-            {t('compliance')}
-          </FooterBaseLink>
+          <AboutOverOverleaf />
         </div>
         <div className="fat-footer-base-item fat-footer-base-language">
           <LanguagePicker showHeader={false} />

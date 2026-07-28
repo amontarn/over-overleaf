@@ -68,7 +68,7 @@ function WelcomeMessageCreateNewProjectDropdown({
     useFeatureFlag('import-markdown') &&
     getMeta('ol-ExposedSettings').enablePandocConversions
 
-  const { isOverleaf } = getMeta('ol-ExposedSettings')
+  const { isOverleaf, gitLabImportEnabled } = getMeta('ol-ExposedSettings')
 
   const handleDropdownItemClick = useCallback(
     (
@@ -184,6 +184,23 @@ function WelcomeMessageCreateNewProjectDropdown({
               tabIndex={-1}
             >
               {t('import_from_github')}
+            </DropdownItem>
+          </li>
+        )}
+        {gitLabImportEnabled && (
+          <li role="none">
+            <DropdownItem
+              as="button"
+              onClick={event =>
+                handleDropdownItemClick(
+                  event,
+                  'import_from_gitlab',
+                  'import-from-gitlab'
+                )
+              }
+              tabIndex={-1}
+            >
+              Importer depuis GitLab
             </DropdownItem>
           </li>
         )}

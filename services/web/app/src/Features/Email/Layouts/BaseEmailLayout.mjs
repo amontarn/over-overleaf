@@ -2,41 +2,21 @@ import _ from 'lodash'
 import settings from '@overleaf/settings'
 import { fontFamily, colors } from '../emailStyles.mjs'
 
-const _isSaas = settings.env === 'saas'
 const _imageBase = settings.cdn?.web?.host || settings.siteUrl || null
 
 let _logoHtml = `<span style="font-family: ${fontFamily}; font-size: 30px; font-weight: bold; color: ${colors.logoGreen};">${settings.appName}</span>`
-let _taglineHtml = ''
-if (_isSaas && _imageBase) {
+const _taglineHtml = ''
+if (_imageBase) {
   _logoHtml = `
     <a href="${settings.siteUrl}" style="text-decoration: none; display: inline-block; border: 0;">
       <img
-        src="${_imageBase}/img/ol-brand/email-logo@2x.png"
+        src="${_imageBase}/img/over-overleaf-logo.png"
         alt="${settings.appName}"
-        width="139"
-        height="40"
-        style="display: block; border: 0; width: 139px; height: 40px;"
+        width="64"
+        height="64"
+        style="display: block; border: 0; width: 64px; height: 64px;"
       >
     </a>
-  `
-
-  _taglineHtml = `
-    <!--[if mso]>
-    <img
-      src="${_imageBase}/img/ol-brand/email-footer-tagline@2x.png"
-      alt="The home of scientific and technical writing"
-      width="452"
-      height="25"
-      style="display: block; border: 0;"
-    />
-    <![endif]-->
-    <!--[if !mso]><!-->
-    <img
-      src="${_imageBase}/img/ol-brand/email-footer-tagline@2x.png"
-      alt="The home of scientific and technical writing"
-      style="display: block; border: 0; width: 100%; max-width: 452px; height: auto;"
-    >
-    <!--<![endif]-->
   `
 }
 

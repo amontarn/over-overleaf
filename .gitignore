@@ -4,3 +4,13 @@
 # user defined files
 .env
 docker-compose.override.yml
+
+# local JavaScript tooling
+node_modules/
+.yarn/cache/
+.yarn/install-state.gz
+.cache/
+
+# editor and operating-system files
+.DS_Store
+*.log

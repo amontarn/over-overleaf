@@ -19,11 +19,9 @@ import DefaultNavbar from '@/shared/components/navbar/default-navbar'
 import Footer from '@/shared/components/footer/footer'
 import SidebarDsNav from '@/features/project-list/components/sidebar/sidebar-ds-nav'
 import SystemMessages from '@/shared/components/system-messages'
-import overleafLogo from '@/shared/svgs/overleaf-a-ds-solution-mallard.svg'
-import overleafLogoDark from '@/shared/svgs/overleaf-a-ds-solution-mallard-dark.svg'
 import CookieBanner from '@/shared/components/cookie-banner'
-import { useActiveOverallTheme } from '@/shared/hooks/use-active-overall-theme'
 import { isSplitTestEnabled } from '@/utils/splitTestUtils'
+import { OVER_OVERLEAF_LOGO_URL } from '@/shared/utils/branding'
 
 export function ProjectListDsNav() {
   const navbarProps = getMeta('ol-navbar')
@@ -38,7 +36,6 @@ export function ProjectListDsNav() {
     tags,
     selectedTagId,
   } = useProjectListContext()
-  const activeOverallTheme = useActiveOverallTheme()
   const isLibraryEnabled = isSplitTestEnabled('overleaf-library')
 
   const selectedTag = tags.find(tag => tag._id === selectedTagId)
@@ -89,9 +86,7 @@ export function ProjectListDsNav() {
       <SystemMessages />
       <DefaultNavbar
         {...navbarProps}
-        overleafLogo={
-          activeOverallTheme === 'dark' ? overleafLogoDark : overleafLogo
-        }
+        overleafLogo={OVER_OVERLEAF_LOGO_URL}
         showCloseIcon
       />
       <div className="project-list-wrapper">

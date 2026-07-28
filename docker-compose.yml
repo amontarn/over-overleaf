@@ -3,15 +3,32 @@ services:
     restart: always
     # Server Pro users:
     # image: quay.io/sharelatex/sharelatex-pro
-    image: sharelatex/sharelatex
+    build:
+      context: .
+      dockerfile: server-ce/Dockerfile
+      args:
+        # The published base image currently embeds an obsolete Corepack. The
+        # complete CE image has the Node/Corepack versions required by this
+        # checkout and is used as the reproducible local build base. Pinned by
+        # digest so rebuilds are reproducible; refresh the digest deliberately
+        # with: docker buildx imagetools inspect sharelatex/sharelatex:latest
+        OVERLEAF_BASE_TAG: sharelatex/sharelatex@sha256:cfdeecb4e55a7ae76f0244b86d1b896580bc7137b82733b886a97575fba19d43
+    image: over-overleaf-sharelatex:local
     container_name: sharelatex
+    # Resource ceilings so a single runaway compile cannot exhaust the host.
+    # Tune to your hardware; raise mem_limit if large documents OOM.
+    cpus: 2.0
+    mem_limit: 4g
+    pids_limit: 4096
     depends_on:
       mongo:
         condition: service_healthy
       redis:
         condition: service_started
     ports:
-      - 80:80
+      # Binds to loopback by default; expose it only through a TLS reverse
+      # proxy. Override OVERLEAF_HTTP_PORT (e.g. "0.0.0.0:80") to publish wider.
+      - "${OVERLEAF_HTTP_PORT:-127.0.0.1:80}:80"
     stop_grace_period: 60s
     volumes:
       - ~/sharelatex_data:/var/lib/overleaf
@@ -21,7 +38,7 @@ services:
       ########################################################################
       # - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      OVERLEAF_APP_NAME: Overleaf Community Edition
+      OVERLEAF_APP_NAME: "${OVERLEAF_APP_NAME:-Over-Overleaf}"
 
       OVERLEAF_MONGO_URL: mongodb://mongo/sharelatex
 
@@ -30,8 +47,32 @@ services:
       OVERLEAF_REDIS_HOST: redis
       REDIS_HOST: redis
 
-      # IMPORTANT: Required for invite token generation
-      # OVERLEAF_INVITE_TOKEN_SECRET: generate with `openssl rand -base64 32`
+      # Required secrets: startup refuses to proceed without them. Generate
+      # each with `openssl rand -base64 48`; see .env.example. Never reuse a
+      # value across the three, and keep them stable across restarts.
+      OVERLEAF_EXTENSIONS_SECRET: "${OVERLEAF_EXTENSIONS_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
+      OVERLEAF_INVITE_TOKEN_SECRET: "${OVERLEAF_INVITE_TOKEN_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
+      OVERLEAF_SESSION_SECRET: "${OVERLEAF_SESSION_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
+      # Distinct internal secret for web<->git-bridge service calls.
+      OVERLEAF_GIT_BRIDGE_INTERNAL_SECRET: "${OVERLEAF_GIT_BRIDGE_INTERNAL_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
+      # Set to "true" when served over HTTPS so the session cookie carries the
+      # Secure attribute. Leave empty for plain-HTTP local development.
+      OVERLEAF_SECURE_COOKIE: "${OVERLEAF_SECURE_COOKIE:-}"
+
+      OVERLEAF_GIT_BRIDGE_ENABLED: "${OVERLEAF_GIT_BRIDGE_ENABLED:-true}"
+      OVERLEAF_GIT_BRIDGE_PUBLIC_URL: "${OVERLEAF_GIT_BRIDGE_PUBLIC_URL:-http://localhost:8000}"
+      OVERLEAF_GIT_BRIDGE_INTERNAL_URL: "http://git-bridge:8000"
+      OVERLEAF_WEB_INTERNAL_URL: "http://sharelatex"
+
+      # Direct, explicit GitLab pull/push. Keep private hosts disabled unless
+      # the instance must reach a trusted self-hosted GitLab on the LAN.
+      OVERLEAF_GITLAB_CONNECTOR_AVAILABLE: "${OVERLEAF_GITLAB_CONNECTOR_AVAILABLE:-true}"
+      OVERLEAF_GITLAB_ALLOW_PRIVATE_HOSTS: "${OVERLEAF_GITLAB_ALLOW_PRIVATE_HOSTS:-false}"
+
+      # Local development only: allow the AI connector to reach Ollama on the host.
+      # HTTP remains restricted to hostnames resolving exclusively to private addresses.
+      OVERLEAF_AI_ALLOW_PRIVATE_HOSTS: "${OVERLEAF_AI_ALLOW_PRIVATE_HOSTS:-true}"
+      OVERLEAF_AI_ALLOW_INSECURE_HTTP: "${OVERLEAF_AI_ALLOW_INSECURE_HTTP:-true}"
 
       ENABLED_LINKED_FILE_TYPES: "project_file,project_output_file"
 
@@ -44,7 +85,7 @@ services:
       ## Set for SSL via nginx-proxy
       #VIRTUAL_HOST: 103.112.212.22
 
-      # OVERLEAF_SITE_URL: http://overleaf.example.com
+      OVERLEAF_SITE_URL: "${OVERLEAF_SITE_URL:-http://localhost}"
       # OVERLEAF_NAV_TITLE: Overleaf Community Edition
       # OVERLEAF_HEADER_IMAGE_URL: http://example.com/mylogo.png
       # OVERLEAF_ADMIN_EMAIL: support@it.com
@@ -79,14 +120,14 @@ services:
       ## so the following environment variables must be commented out to avoid compile issues.
       ##
       ## Sandboxed Compiles: https://docs.overleaf.com/on-premises/configuration/overleaf-toolkit/server-pro-only-configuration/sandboxed-compiles
-      SANDBOXED_COMPILES: "true"
+      # SANDBOXED_COMPILES: "true"
       ### Bind-mount source for /var/lib/overleaf/data/compiles inside the container.
-      SANDBOXED_COMPILES_HOST_DIR_COMPILES: "/home/user/sharelatex_data/data/compiles"
+      # SANDBOXED_COMPILES_HOST_DIR_COMPILES: "/home/user/sharelatex_data/data/compiles"
       ### Bind-mount source for /var/lib/overleaf/data/output inside the container.
-      SANDBOXED_COMPILES_HOST_DIR_OUTPUT: "/home/user/sharelatex_data/data/output"
+      # SANDBOXED_COMPILES_HOST_DIR_OUTPUT: "/home/user/sharelatex_data/data/output"
       ### Backwards compatibility (before Server Pro 5.5)
-      DOCKER_RUNNER: "true"
-      SANDBOXED_COMPILES_SIBLING_CONTAINERS: "true"
+      # DOCKER_RUNNER: "true"
+      # SANDBOXED_COMPILES_SIBLING_CONTAINERS: "true"
 
       ## Works with test LDAP server shown at bottom of docker compose
       # OVERLEAF_LDAP_URL: 'ldap://ldap:389'
@@ -106,8 +147,12 @@ services:
 
   mongo:
     restart: always
-    image: mongo:8.0
+    # Pinned by digest for reproducible builds (mongo:8.0 at pin time).
+    image: mongo:8.0@sha256:5351bff2b5d1563e3fa603a74b9be85ef9323e10aeb0b45cea933a93876e77fd
     container_name: mongo
+    cpus: 1.5
+    mem_limit: 2g
+    pids_limit: 2048
     command: "--replSet overleaf"
     volumes:
       - ~/mongo_data:/data/db
@@ -126,10 +171,54 @@ services:
 
   redis:
     restart: always
-    image: redis:6.2
+    # Pinned by digest for reproducible builds (redis:6.2 at pin time).
+    image: redis:6.2@sha256:28df45e148984f73a0468aa28c34a465e7c7c40b53abb5640b7f38c313fddb05
     container_name: redis
+    cpus: 1.0
+    mem_limit: 1g
+    pids_limit: 512
     volumes:
       - ~/redis_data:/data
+
+  git-bridge:
+    restart: always
+    build:
+      context: .
+      dockerfile: services/git-bridge-node/Dockerfile
+    image: over-overleaf-git-bridge-node:local
+    container_name: git-bridge
+    cpus: 1.0
+    mem_limit: 1g
+    pids_limit: 1024
+    depends_on:
+      sharelatex:
+        condition: service_started
+    ports:
+      # Loopback by default; the public Git endpoint should sit behind the
+      # same TLS reverse proxy. Override OVERLEAF_GIT_PORT to publish wider.
+      - "${OVERLEAF_GIT_PORT:-127.0.0.1:8000}:8000"
+    volumes:
+      - ~/git_bridge_data:/data/git-bridge
+    environment:
+      GIT_BRIDGE_ROOT_DIR: /data/git-bridge
+      GIT_BRIDGE_WEB_URL: http://sharelatex
+      GIT_BRIDGE_PUBLIC_URL: "${OVERLEAF_GIT_BRIDGE_PUBLIC_URL:-http://localhost:8000}"
+      GIT_BRIDGE_INTERNAL_URL: http://git-bridge:8000
+      GIT_BRIDGE_INTERNAL_SECRET: "${OVERLEAF_GIT_BRIDGE_INTERNAL_SECRET:?set a long random secret; copy .env.example to .env (openssl rand -base64 48)}"
+      GIT_BRIDGE_BRANCH: master
+      GIT_BRIDGE_MAX_FILES: 2000
+      GIT_BRIDGE_MAX_PROJECT_SIZE: 104857600
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:8000/health_check').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   # ldap:
   #    restart: always

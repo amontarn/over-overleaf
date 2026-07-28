@@ -32,12 +32,10 @@ const PATHS = {
 const IMAGES = {
   CE: process.env.IMAGE_TAG_CE.replace(/:.+/, ''),
   PRO: process.env.IMAGE_TAG_PRO.replace(/:.+/, ''),
-  GIT_BRIDGE: process.env.IMAGE_TAG_GIT_BRIDGE.replace(/:.+/, ''),
 }
 const LATEST = {
   CE: process.env.IMAGE_TAG_CE.replace(/.+:/, '') || 'latest',
   PRO: process.env.IMAGE_TAG_PRO.replace(/.+:/, '') || 'latest',
-  GIT_BRIDGE: process.env.IMAGE_TAG_GIT_BRIDGE.replace(/.+:/, '') || 'latest',
 }
 
 function defaultDockerComposeOverride() {
@@ -46,7 +44,6 @@ function defaultDockerComposeOverride() {
       sharelatex: {
         environment: {},
       },
-      'git-bridge': {},
       mongo: {},
     },
   }
@@ -193,9 +190,6 @@ const allowedVars = z.object(
       'OVERLEAF_LEFT_FOOTER',
       'OVERLEAF_RIGHT_FOOTER',
       'OVERLEAF_PROXY_LEARN',
-      'GIT_BRIDGE_ENABLED',
-      'GIT_BRIDGE_HOST',
-      'GIT_BRIDGE_PORT',
       'V1_HISTORY_URL',
       'SANDBOXED_COMPILES',
       'ALL_TEX_LIVE_DOCKER_IMAGE_NAMES',
@@ -242,16 +236,10 @@ function setVarsDockerCompose({
   const cfg = readDockerComposeOverride()
 
   cfg.services.sharelatex.image = `${pro ? IMAGES.PRO : IMAGES.CE}:${version === 'latest' ? (pro ? LATEST.PRO : LATEST.CE) : version}`
-  cfg.services['git-bridge'].image =
-    `${IMAGES.GIT_BRIDGE}:${version === 'latest' ? LATEST.GIT_BRIDGE : version}`
 
   cfg.services.sharelatex.environment = vars
 
-  if (cfg.services.sharelatex.environment.GIT_BRIDGE_ENABLED === 'true') {
-    cfg.services.sharelatex.depends_on = ['git-bridge']
-  } else {
-    cfg.services.sharelatex.depends_on = []
-  }
+  cfg.services.sharelatex.depends_on = []
 
   if (['ldap', 'saml'].includes(vars.EXTERNAL_AUTH)) {
     cfg.services.sharelatex.depends_on.push(vars.EXTERNAL_AUTH)
@@ -321,7 +309,6 @@ app.post(
               '--volumes',
               '--timeout=60',
               'sharelatex',
-              'git-bridge',
               'mongo',
               'redis',
             ])

@@ -431,6 +431,73 @@ module.exports = {
     trackChanges: true,
   }),
 
+  // Community Git Bridge. The protocol service is implemented in Node.js and
+  // exposed independently from the web process.
+  enableGitBridge: process.env.OVERLEAF_GIT_BRIDGE_ENABLED !== 'false',
+  gitBridgePublicBaseUrl:
+    process.env.OVERLEAF_GIT_BRIDGE_PUBLIC_URL || 'http://localhost:8000',
+
+  communityFeatures: {
+    encryptionSecret: process.env.OVERLEAF_EXTENSIONS_SECRET,
+    gitBridge: {
+      enabled: process.env.OVERLEAF_GIT_BRIDGE_ENABLED !== 'false',
+      publicUrl:
+        process.env.OVERLEAF_GIT_BRIDGE_PUBLIC_URL || 'http://localhost:8000',
+      internalUrl:
+        process.env.OVERLEAF_GIT_BRIDGE_INTERNAL_URL ||
+        'http://git-bridge:8000',
+      // Secret shared only with the Git Bridge for internal service-to-service
+      // calls (project deletion, file streaming). Kept distinct from the
+      // encryption secret so a leak of one does not compromise the other;
+      // falls back to the encryption secret for single-secret deployments.
+      internalSecret:
+        process.env.OVERLEAF_GIT_BRIDGE_INTERNAL_SECRET ||
+        process.env.OVERLEAF_EXTENSIONS_SECRET,
+      webInternalUrl:
+        process.env.OVERLEAF_WEB_INTERNAL_URL || 'http://sharelatex',
+      workDir:
+        process.env.OVERLEAF_GIT_WORK_DIR ||
+        '/var/lib/overleaf/tmp/git-bridge',
+      maxFiles: intFromEnv('OVERLEAF_GIT_MAX_FILES', 2000),
+      maxBytes: intFromEnv(
+        'OVERLEAF_GIT_MAX_BYTES',
+        100 * 1024 * 1024
+      ),
+    },
+    gitLab: {
+      available:
+        process.env.OVERLEAF_GITLAB_CONNECTOR_AVAILABLE !== 'false',
+      allowPrivateHosts:
+        process.env.OVERLEAF_GITLAB_ALLOW_PRIVATE_HOSTS === 'true',
+      requestTimeoutMs: intFromEnv(
+        'OVERLEAF_GITLAB_REQUEST_TIMEOUT_MS',
+        5 * 60 * 1000
+      ),
+      maxImportBytes: intFromEnv(
+        'OVERLEAF_GITLAB_MAX_IMPORT_BYTES',
+        100 * 1024 * 1024
+      ),
+    },
+    ai: {
+      available: process.env.OVERLEAF_AI_CONNECTOR_AVAILABLE !== 'false',
+      allowPrivateHosts:
+        process.env.OVERLEAF_AI_ALLOW_PRIVATE_HOSTS === 'true',
+      allowInsecureHttp:
+        process.env.OVERLEAF_AI_ALLOW_INSECURE_HTTP === 'true',
+      requestTimeoutMs: intFromEnv('OVERLEAF_AI_REQUEST_TIMEOUT_MS', 60_000),
+      maxInputChars: intFromEnv('OVERLEAF_AI_MAX_INPUT_CHARS', 20_000),
+      maxProjectContextChars: intFromEnv(
+        'OVERLEAF_AI_MAX_PROJECT_CONTEXT_CHARS',
+        50_000
+      ),
+      maxOutputTokens: intFromEnv('OVERLEAF_AI_MAX_OUTPUT_TOKENS', 2_000),
+      requestsPerMinute: intFromEnv(
+        'OVERLEAF_AI_REQUESTS_PER_MINUTE',
+        30
+      ),
+    },
+  },
+
   // featuresEpoch: 'YYYY-MM-DD',
 
   personalAccessTokens: {
@@ -1035,7 +1102,12 @@ module.exports = {
     contactUsModal: [],
     sourceEditorExtensions: [],
     sourceEditorVisualExtensions: [],
-    sourceEditorComponents: [],
+    sourceEditorComponents: [
+      Path.resolve(
+        __dirname,
+        '../modules/community-features/frontend/js/ai/ai-editor-bridge.tsx'
+      ),
+    ],
     pdfLogEntryHeaderActionComponents: [],
     pdfLogEntryComponents: [],
     pdfLogEntriesComponents: [],
@@ -1098,13 +1170,23 @@ module.exports = {
         '../modules/full-project-search/frontend/js/components/full-project-search.tsx'
       ),
     ],
-    integrationPanelComponents: [],
+    integrationPanelComponents: [
+      Path.resolve(
+        __dirname,
+        '../modules/community-features/frontend/js/git/git-integrations.tsx'
+      ),
+    ],
     referenceSearchSetting: [],
     settingsModalEditorTabSections: [],
     settingsModalSpellcheckSections: [],
     editorFloatingMenuActions: [],
     referenceIndices: [],
-    railEntries: [],
+    railEntries: [
+      Path.resolve(
+        __dirname,
+        '../modules/community-features/frontend/js/ai/ai-rail-entry.tsx'
+      ),
+    ],
     railPopovers: [],
     railActions: [],
     railModals: [],
@@ -1113,6 +1195,8 @@ module.exports = {
   moduleImportSequence: [
     'history-v1',
     'launchpad',
+    'community-features',
+    'track-changes',
     'server-ce-scripts',
     'user-activate',
   ],

@@ -39,6 +39,11 @@ import useEventListener from '@/shared/hooks/use-event-listener'
 import useReviewPanelLayout from '../hooks/use-review-panel-layout'
 import { usePermissionsContext } from '@/features/ide-react/context/permissions-context'
 import { sendMB } from '@/infrastructure/event-tracking'
+import { useEditorOpenDocContext } from '@/features/ide-react/context/editor-open-doc-context'
+import {
+  AI_SELECTION_CAPTURED,
+  AiSelection,
+} from '../../../../../modules/community-features/frontend/js/ai/ai-assistant-events'
 
 const EDIT_MODE_SWITCH_WIDGET_HEIGHT = 40
 const CM_LINE_RIGHT_PADDING = 8
@@ -137,6 +142,7 @@ const ReviewTooltipMenuContent = memo<{ onAddComment: () => void }>(
     const { t } = useTranslation()
     const view = useCodeMirrorViewContext()
     const state = useCodeMirrorStateContext()
+    const { openDocName } = useEditorOpenDocContext()
     const { reviewPanelOpen } = useLayoutContext()
     const permissions = usePermissionsContext()
     const ranges = useRangesContext()
@@ -154,6 +160,25 @@ const ReviewTooltipMenuContent = memo<{ onAddComment: () => void }>(
       })
       onAddComment()
     }, [onAddComment])
+
+    const handleAiQuoteClick = useCallback(() => {
+      const { from, to } = view.state.selection.main
+      if (from === to) return
+      const selection: AiSelection = {
+        source: view.state.sliceDoc(from, to),
+        from,
+        to,
+        docName: openDocName || '',
+      }
+      window.dispatchEvent(
+        new CustomEvent(AI_SELECTION_CAPTURED, { detail: selection })
+      )
+      window.dispatchEvent(
+        new CustomEvent('ui:select-rail-tab', {
+          detail: { tab: 'ai-assistant', open: true },
+        })
+      )
+    }, [openDocName, view])
 
     const changesInSelection = useMemo(() => {
       return (ranges?.changes ?? []).filter(({ op }) => {
@@ -270,6 +295,15 @@ const ReviewTooltipMenuContent = memo<{ onAddComment: () => void }>(
         >
           <MaterialIcon type="chat" />
           {t('add_comment')}
+        </button>
+        <div className="review-tooltip-menu-divider" />
+        <button
+          className="review-tooltip-menu-button review-tooltip-community-ai-button"
+          onClick={handleAiQuoteClick}
+          aria-label="Citer dans l’assistant IA"
+        >
+          <MaterialIcon type="smart_toy" />
+          Citer dans l’assistant IA
         </button>
         {showChangesButtons && (
           <>

@@ -1,0 +1,156 @@
+extends ../../../../app/views/layout-marketing
+
+block vars
+	- metadata = metadata || {};
+
+block append meta
+	meta(name="ol-community-admin-users", content="true")
+
+block content
+	#main-content.content.content-alt
+		.container
+			.row
+				.col-sm-12
+					.card
+						.card-body
+							.page-header
+								h1 User administration
+								p
+									a(href="/admin#community-features") Back to Admin Panel
+
+							if notice
+								.alert(class=`alert-${notice.type}`, role="status")
+									p= notice.message
+									if notice.activationUrl
+										p This one-time activation URL is displayed once:
+										code= notice.activationUrl
+
+							h2 Create or invite a user
+							form(method="post", action="/admin/community/users")
+								input(name="_csrf", type="hidden", value=csrfToken)
+								.row
+									.col-md-8
+										.form-group
+											label.form-label(for="new-user-email") Email
+											input#new-user-email.form-control(
+												name="email",
+												type="email",
+												required,
+												maxlength="254"
+											)
+									.col-md-2
+										.form-group
+											label.form-label(for="new-user-admin") Role
+											select#new-user-admin.form-select(name="isAdmin")
+												option(value="false") User
+												option(value="true") Site admin
+									.col-md-2
+										.form-group
+											label.form-label &nbsp;
+											button.btn.btn-primary.form-control(type="submit") Create
+
+							hr
+							h2 Existing users
+							form(method="get", action="/admin/community/users")
+								.form-group
+									label.form-label(for="user-search") Search by email, name or exact ID
+									.input-group
+										input#user-search.form-control(
+											name="q",
+											value=query,
+											maxlength="254"
+										)
+										button.btn.btn-secondary(type="submit") Search
+
+							p.text-muted #{ pagination.total } account(s)
+							.table-responsive
+								table.table.table-striped
+									thead
+										tr
+											th Account
+											th Status
+											th Owned projects
+											th Last login
+											th Actions
+									tbody
+										each user in users
+											tr
+												td
+													strong= user.email
+													br
+													span.text-muted #{ user.first_name || '' } #{ user.last_name || '' }
+													br
+													code= user._id
+												td
+													if user.suspended
+														span.label.label-warning Suspended
+													else
+														span.label.label-success Active
+													if user.isAdmin
+														|
+														span.label.label-info Admin
+												td= user.ownedProjectCount
+												td= user.lastLoggedIn ? user.lastLoggedIn.toISOString() : "Never"
+												td
+													if user._id.toString() === currentUserId
+														span.text-muted Current administrator
+													else
+														if user.suspended
+															form.d-inline(
+																method="post",
+																action=`/admin/community/users/${user._id}/unsuspend`
+															)
+																input(name="_csrf", type="hidden", value=csrfToken)
+																button.btn.btn-sm.btn-success(type="submit") Re-enable
+														else
+															form.d-inline(
+																method="post",
+																action=`/admin/community/users/${user._id}/suspend`
+															)
+																input(name="_csrf", type="hidden", value=csrfToken)
+																button.btn.btn-sm.btn-warning(type="submit") Suspend
+														|
+														form.d-inline(
+															method="post",
+															action=`/admin/community/users/${user._id}/revoke-sessions`
+														)
+															input(name="_csrf", type="hidden", value=csrfToken)
+															button.btn.btn-sm.btn-secondary(type="submit") Revoke sessions
+														details
+															summary.text-danger Delete account
+															form(
+																method="post",
+																action=`/admin/community/users/${user._id}/delete`
+															)
+																input(name="_csrf", type="hidden", value=csrfToken)
+																.form-group
+																	label.form-label Transfer owned projects to active user email
+																	input.form-control(
+																		name="transferTo",
+																		type="email",
+																		required=user.ownedProjectCount > 0
+																	)
+																.form-group
+																	label.form-label Confirm by typing #{ user.email }
+																	input.form-control(
+																		name="confirmationEmail",
+																		type="email",
+																		required
+																	)
+																button.btn.btn-sm.btn-danger(type="submit") Permanently delete
+
+							if pagination.pageCount > 1
+								nav(aria-label="User pages")
+									ul.pagination
+										if pagination.page > 1
+											li.page-item
+												a.page-link(
+													href=`?q=${encodeURIComponent(query)}&page=${pagination.page - 1}`
+												) Previous
+										li.page-item.active
+											span.page-link #{ pagination.page } / #{ pagination.pageCount }
+										if pagination.page < pagination.pageCount
+											li.page-item
+												a.page-link(
+													href=`?q=${encodeURIComponent(query)}&page=${pagination.page + 1}`
+												) Next

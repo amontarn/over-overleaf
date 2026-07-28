@@ -1,9 +1,13 @@
 .fat-footer-base
 	.fat-footer-base-section.fat-footer-base-meta
 		.fat-footer-base-item
-			.fat-footer-base-copyright © #{new Date().getFullYear()} Overleaf
+			.fat-footer-base-copyright © #{new Date().getFullYear()} Over-Overleaf
 			a(href='/legal') #{translate('privacy_and_terms')}
-			a(href='https://www.digital-science.com/security-certifications/') #{translate('compliance')}
+			a(
+				href='#about-over-overleaf-modal'
+				data-bs-toggle='modal'
+				data-bs-target='#about-over-overleaf-modal'
+			) About
 		ul.fat-footer-base-item.list-unstyled.fat-footer-base-language
 			include language-picker
 	.fat-footer-base-section.fat-footer-base-social

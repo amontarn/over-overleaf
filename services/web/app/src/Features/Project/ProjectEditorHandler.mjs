@@ -4,6 +4,7 @@ let ProjectEditorHandler
 
 export default ProjectEditorHandler = {
   trackChangesAvailable: false,
+  trackChangesEnabled: false,
 
   buildProjectModelView(
     project,
@@ -54,6 +55,11 @@ export default ProjectEditorHandler = {
       trackChangesVisible: ProjectEditorHandler.trackChangesAvailable,
       symbolPalette: false,
     })
+
+    if (ProjectEditorHandler.trackChangesEnabled) {
+      result.features.trackChanges = true
+      result.features.trackChangesVisible = true
+    }
 
     if (result.features.trackChanges) {
       result.trackChangesState = project.track_changes || false

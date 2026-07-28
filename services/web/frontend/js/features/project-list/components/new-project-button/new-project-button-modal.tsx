@@ -9,12 +9,14 @@ import { Tag } from '../../../../../../app/src/Features/Tags/types'
 
 const UploadProjectModal = lazy(() => import('./upload-project-modal'))
 const ImportDocumentModal = lazy(() => import('./import-document-modal'))
+const ImportGitLabModal = lazy(() => import('./import-gitlab-modal'))
 
 export type NewProjectButtonModalVariant =
   | 'blank_project'
   | 'example_project'
   | 'upload_project'
   | 'import_from_github'
+  | 'import_from_gitlab'
   | 'import_docx'
   | 'import_markdown'
 
@@ -82,6 +84,12 @@ function NewProjectButtonModal({
       )
     case 'import_from_github':
       return <ImportProjectFromGithubModalWrapper onHide={onHide} />
+    case 'import_from_gitlab':
+      return (
+        <Suspense fallback={<FullSizeLoadingSpinner delay={500} />}>
+          <ImportGitLabModal onHide={onHide} openProject={openProject} />
+        </Suspense>
+      )
     default:
       return null
   }

@@ -103,16 +103,14 @@ export const TrackChangesStateProvider: FC<React.PropsWithChildren> = ({
 
   const saveTrackChangesForCurrentUser = useCallback(
     async (trackChanges: boolean) => {
-      if (user.id) {
-        saveTrackChanges({
-          on_for: {
-            ...onForMembers,
-            [user.id]: trackChanges,
-          },
-        })
-      }
+      // A collaborator (or anonymous guest) may only change their own flag; the
+      // dedicated endpoint updates just this caller atomically, deriving the
+      // logged-in user or the shared guest key server-side, with no admin rights.
+      postJSON(`/project/${projectId}/track_changes/me`, {
+        body: { on: trackChanges },
+      })
     },
-    [onForMembers, user.id, saveTrackChanges]
+    [projectId]
   )
 
   const actions = useMemo(
@@ -133,12 +131,7 @@ export const TrackChangesStateProvider: FC<React.PropsWithChildren> = ({
         !onForEveryone
       ) {
         const value = onForMembers[user.id]
-        actions.saveTrackChanges({
-          on_for: {
-            ...onForMembers,
-            [user.id]: !value,
-          },
-        })
+        actions.saveTrackChangesForCurrentUser(!value)
       }
     }, [
       actions,

@@ -21,6 +21,10 @@ import {
 import { Ranges } from '@/features/review-panel/context/ranges-context'
 import { Threads } from '@/features/review-panel/context/threads-context'
 import { isSelectionWithinOp } from '@/features/review-panel/utils/is-selection-within-op'
+import {
+  createDeletedTextElement,
+  deletedTextTheme,
+} from '@/features/source-editor/extensions/changes/deleted-text'
 
 type RangesData = {
   ranges: Ranges
@@ -108,10 +112,10 @@ export const ranges = () => [
               ) {
                 this.decorations = updateDeleteWidgetHighlight(
                   this.decorations,
-                  widget =>
+                  (widget) =>
                     widget.change.op.p === effect.value.p &&
                     widget.highlightType !== 'focus',
-                  'highlight'
+                  'highlight',
                 )
               } else if (
                 effect.is(clearHighlightRangesEffect) &&
@@ -119,10 +123,10 @@ export const ranges = () => [
               ) {
                 this.decorations = updateDeleteWidgetHighlight(
                   this.decorations,
-                  widget =>
+                  (widget) =>
                     widget.change.op.p === effect.value.p &&
                     widget.highlightType !== 'focus',
-                  null
+                  null,
                 )
               }
             }
@@ -132,13 +136,13 @@ export const ranges = () => [
                 this.decorations,
                 ({ change }) =>
                   isSelectionWithinOp(change.op, update.state.selection.main),
-                'focus'
+                'focus',
               )
               this.decorations = updateDeleteWidgetHighlight(
                 this.decorations,
                 ({ change }) =>
                   !isSelectionWithinOp(change.op, update.state.selection.main),
-                null
+                null,
               )
             }
           }
@@ -146,8 +150,8 @@ export const ranges = () => [
       }
     },
     {
-      decorations: value => value.decorations,
-    }
+      decorations: (value) => value.decorations,
+    },
   ),
 
   // draw highlight decorations
@@ -167,7 +171,7 @@ export const ranges = () => [
               if (effect.is(highlightRangesEffect)) {
                 this.decorations = buildHighlightDecorations(
                   'ol-cm-change-highlight',
-                  effect.value
+                  effect.value,
                 )
               } else if (effect.is(clearHighlightRangesEffect)) {
                 this.decorations = Decoration.none
@@ -178,8 +182,8 @@ export const ranges = () => [
       }
     },
     {
-      decorations: value => value.decorations,
-    }
+      decorations: (value) => value.decorations,
+    },
   ),
 
   // draw focus decorations
@@ -188,15 +192,15 @@ export const ranges = () => [
       decorations: DecorationSet
     }
   >(
-    view => {
+    (view) => {
       return {
         decorations: Decoration.none,
         update(update) {
           if (
             !update.transactions.some(
-              tr =>
+              (tr) =>
                 tr.selection ||
-                tr.effects.some(effect => effect.is(updateRangesEffect))
+                tr.effects.some((effect) => effect.is(updateRangesEffect)),
             )
           ) {
             this.decorations = this.decorations.map(update.changes)
@@ -212,10 +216,10 @@ export const ranges = () => [
           const { changes, comments } = rangesData.ranges
           const unresolvedComments = rangesData.threads
             ? comments.filter(
-                comment =>
+                (comment) =>
                   comment.op.t &&
                   rangesData.threads[comment.op.t] &&
-                  !rangesData.threads[comment.op.t].resolved
+                  !rangesData.threads[comment.op.t].resolved,
               )
             : []
 
@@ -223,7 +227,7 @@ export const ranges = () => [
             if (isSelectionWithinOp(range.op, update.state.selection.main)) {
               this.decorations = buildHighlightDecorations(
                 'ol-cm-change-focus',
-                range.op
+                range.op,
               )
               break
             }
@@ -232,8 +236,8 @@ export const ranges = () => [
       }
     },
     {
-      decorations: value => value.decorations,
-    }
+      decorations: (value) => value.decorations,
+    },
   ),
 
   // styles for change decorations
@@ -264,7 +268,7 @@ const buildChangeDecorations = (data: RangesData) => {
 const updateDeleteWidgetHighlight = (
   decorations: DecorationSet,
   predicate: (widget: ChangeDeletedWidget) => boolean,
-  highlightType?: 'focus' | 'highlight' | null
+  highlightType?: 'focus' | 'highlight' | null,
 ) => {
   const widgetsToReplace: ChangeDeletedWidget[] = []
   const cursor = decorations.iter()
@@ -288,7 +292,7 @@ const updateDeleteWidgetHighlight = (
         opType: 'd',
         id: change.id,
         metadata: change.metadata,
-      }).range(change.op.p, change.op.p)
+      }).range(change.op.p, change.op.p),
     ),
   })
 }
@@ -311,22 +315,20 @@ const buildHighlightDecorations = (className: string, op: AnyOperation) => {
     Decoration.mark({
       class: `${className} ${className}-${opType}`,
     }).range(opFrom, opFrom + opLength),
-    true
+    true,
   )
 }
 
 class ChangeDeletedWidget extends WidgetType {
   constructor(
     public change: Change<DeleteOperation>,
-    public highlightType: 'highlight' | 'focus' | null = null
+    public highlightType: 'highlight' | 'focus' | null = null,
   ) {
     super()
   }
 
   toDOM() {
-    const widget = document.createElement('span')
-    widget.classList.add('ol-cm-change')
-    widget.classList.add('ol-cm-change-d')
+    const widget = createDeletedTextElement(this.change.op.d)
     if (this.highlightType) {
       widget.classList.add(`ol-cm-change-d-${this.highlightType}`)
     }
@@ -334,7 +336,10 @@ class ChangeDeletedWidget extends WidgetType {
   }
 
   eq(old: ChangeDeletedWidget) {
-    return old.highlightType === this.highlightType
+    return (
+      old.change.op.d === this.change.op.d &&
+      old.highlightType === this.highlightType
+    )
   }
 }
 
@@ -410,20 +415,5 @@ const trackChangesTheme = EditorView.baseTheme({
   '.ol-cm-change-focus': {
     padding: 'var(--half-leading, 0) 0',
   },
-  '&light .ol-cm-change-d': {
-    borderLeft: '2px dotted #c5060b',
-    marginLeft: '-1px',
-  },
-  '&dark .ol-cm-change-d': {
-    borderLeft: '2px dotted #c5060b',
-    marginLeft: '-1px',
-  },
-  '&light .ol-cm-change-d-highlight': {
-    borderLeft: '3px solid #c5060b',
-    marginLeft: '-2px',
-  },
-  '&dark .ol-cm-change-d-highlight': {
-    borderLeft: '3px solid #c5060b',
-    marginLeft: '-2px',
-  },
+  ...deletedTextTheme,
 })

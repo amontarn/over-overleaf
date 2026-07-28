@@ -21,6 +21,8 @@ block body
 	if typeof suppressPugCookieBanner == 'undefined'
 		include _cookie_banner
 
+	include layout/about-over-overleaf-modal
+
 	!= moduleIncludes('contactModal-marketing', locals)
 
 block prepend foot-scripts

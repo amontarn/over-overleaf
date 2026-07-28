@@ -239,8 +239,9 @@ const settings = {
   cacheStaticAssets: true,
 
   // If you are running Overleaf Community Edition over https, set this to true to send the
-  // cookie with a secure flag (recommended).
-  secureCookie: process.env.OVERLEAF_SECURE_COOKIE != null,
+  // cookie with a secure flag (recommended). Only the exact string "true"
+  // enables it, so OVERLEAF_SECURE_COOKIE=false (or empty) correctly disables it.
+  secureCookie: process.env.OVERLEAF_SECURE_COOKIE === 'true',
 
   // If you are running Overleaf Community Edition behind a proxy (like Apache, Nginx, etc)
   // then set this to true to allow it to correctly detect the forwarded IP
@@ -307,7 +308,7 @@ const settings = {
 
 // This secret is used for encrypting sharing link tokens in the database
 if (process.env.OVERLEAF_INVITE_TOKEN_SECRET) {
-  module.exports.projectInviteEncryptorOptions = {
+  settings.projectInviteEncryptorOptions = {
     cipherLabel: '2026.3-v3',
     cipherPasswords: {
       '2026.3-v3': process.env.OVERLEAF_INVITE_TOKEN_SECRET,

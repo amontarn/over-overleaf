@@ -22,6 +22,7 @@ export type RailTabKey =
   | 'integrations'
   | 'review-panel'
   | 'chat'
+  | 'ai-assistant'
   | 'full-project-search'
   | 'dimensions'
   | 'workbench'
@@ -31,6 +32,7 @@ export type RailModalKey =
   | 'contact-us'
   | 'dictionary'
   | 'labs'
+  | 'about-over-overleaf'
 
 export function dispatchOpenRailModal(key: RailModalKey) {
   window.dispatchEvent(new CustomEvent('ui:open-rail-modal', { detail: key }))

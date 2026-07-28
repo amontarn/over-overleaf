@@ -1,16 +1,16 @@
 @use 'sass:math';
 
 @mixin loading-screen-dark {
-  --loading-screen-ol-logo-empty-url: url(../../../../public/img/ol-brand/overleaf-o-grey.svg);
-  --loading-screen-ol-logo-full-url: url(../../../../public/img/ol-brand/overleaf-o-white.svg);
+  --loading-screen-ol-logo-empty-url: url('../../../../public/img/over-overleaf-logo.png');
+  --loading-screen-ol-logo-full-url: url('../../../../public/img/over-overleaf-logo.png');
   --loading-screen-bg-color: var(--bg-dark-primary);
   --loading-screen-color: var(--content-secondary-dark);
   --loading-screen-danger-color: var(--content-danger-dark);
 }
 
 @mixin loading-screen-light {
-  --loading-screen-ol-logo-empty-url: url(../../../../public/img/ol-brand/overleaf-o-grey.svg);
-  --loading-screen-ol-logo-full-url: url(../../../../public/img/ol-brand/overleaf-o.svg);
+  --loading-screen-ol-logo-empty-url: url('../../../../public/img/over-overleaf-logo.png');
+  --loading-screen-ol-logo-full-url: url('../../../../public/img/over-overleaf-logo.png');
   --loading-screen-bg-color: var(--bg-light-primary);
   --loading-screen-color: var(--content-secondary);
   --loading-screen-danger-color: var(--content-danger);

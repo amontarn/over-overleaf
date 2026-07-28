@@ -1,0 +1,175 @@
+extends ../../../../app/views/layout-marketing
+
+block vars
+	- metadata = metadata || {};
+
+block append meta
+	meta(name="ol-community-project-git", content="true")
+
+block content
+	#main-content.content.content-alt
+		.container
+			.row
+				.col-lg-10.offset-lg-1
+					.card
+						.card-body
+							.page-header
+								h1 Git synchronization
+								p
+									strong= project.name
+									|
+									| —
+									a(href=`/project/${project._id}`) Return to editor
+
+							if notice
+								.alert(class=`alert-${notice.type}`, role="status")= notice.message
+								if notice.token
+									p
+										strong Copy this token now. It cannot be displayed again:
+									pre= notice.token
+
+							if gitBridgeEnabled
+								h2 Overleaf Git remote
+								p This project is exposed as a single-branch Git remote backed by the Node.js Git service.
+								pre git clone #{ gitBridgeCloneUrl }
+								ul
+									li Use #[code git] as the username and a personal token as the password.
+									li Online changes are committed before every fetch or push.
+									li Only #[code master] is accepted and every push must be fast-forward.
+									li If the remote changed, fetch and resolve locally before pushing again.
+
+								.alert.alert-warning(role="alert")
+									strong Account-wide token.
+									|  A Git token is tied to your account, not to this project. It grants access to every project you can currently — or later — reach, and stays valid for one year unless you revoke it. Treat it like a password and revoke any token you no longer use.
+
+								form(method="post", action=`/project/${project._id}/git/tokens`)
+									input(name="_csrf", type="hidden", value=csrfToken)
+									.form-group
+										label.form-label(for="git-token-label") Token label
+										input#git-token-label.form-control(
+											name="label",
+											maxlength="100",
+											value="Local Git"
+										)
+									button.btn.btn-primary(type="submit") Generate Git token
+
+								if gitTokens.length
+									table.table.table-striped
+										thead
+											tr
+												th Token
+												th Expires
+												th Last used
+												th
+										tbody
+											each gitToken in gitTokens
+												tr
+													td #{ gitToken.label } (#[code #{ gitToken.prefix }…])
+													td= gitToken.expiresAt.toISOString()
+													td= gitToken.lastUsedAt ? gitToken.lastUsedAt.toISOString() : "Never"
+													td
+														if !gitToken.revokedAt
+															form(
+																method="post",
+																action=`/project/${project._id}/git/tokens/${gitToken._id}/revoke`
+															)
+																input(name="_csrf", type="hidden", value=csrfToken)
+																button.btn.btn-sm.btn-danger(type="submit") Revoke
+							else
+								.alert.alert-warning The Git service is disabled by the administrator.
+
+							hr
+							h2 GitLab connector
+							if !gitLabAvailable
+								.alert.alert-warning The GitLab connector is disabled by the administrator.
+							else if gitLabConnection
+								p This project is connected to a GitLab-compatible HTTPS repository. Synchronization is manual and always targets one branch.
+								dl.row
+									dt.col-sm-3 Repository
+									dd.col-sm-9
+										code= gitLabConnection.remoteUrl
+									dt.col-sm-3 Branch
+									dd.col-sm-9
+										code= gitLabConnection.branch
+									dt.col-sm-3 Last synchronized commit
+									dd.col-sm-9
+										code= gitLabConnection.lastSyncedCommit
+									dt.col-sm-3 Last synchronization
+									dd.col-sm-9= gitLabConnection.lastSyncedAt.toISOString()
+
+								.alert.alert-info Pull is accepted only when Overleaf has not changed since the last synchronization. Push is accepted only when GitLab has not changed. If both sides changed, resolve the divergence with a normal local Git clone.
+
+								.d-flex.gap-2.flex-wrap
+									form(method="post", action=`/project/${project._id}/git/gitlab/pull`)
+										input(name="_csrf", type="hidden", value=csrfToken)
+										button.btn.btn-primary(type="submit") Pull from GitLab
+									form(method="post", action=`/project/${project._id}/git/gitlab/push`)
+										input(name="_csrf", type="hidden", value=csrfToken)
+										button.btn.btn-primary(type="submit") Push to GitLab
+
+								details.mt-4
+									summary Disconnect GitLab
+									p.mt-2 Disconnecting removes the encrypted credential and synchronization marker. It does not change either repository.
+									form(
+										method="post",
+										action=`/project/${project._id}/git/gitlab/disconnect`
+									)
+										input(name="_csrf", type="hidden", value=csrfToken)
+										.form-check.mb-2
+											input#gitlab-confirm-disconnect.form-check-input(
+												type="checkbox",
+												name="confirmDisconnect",
+												value="yes",
+												required
+											)
+											label.form-check-label(for="gitlab-confirm-disconnect") Remove this connection
+										button.btn.btn-danger(type="submit") Disconnect
+							else
+								p Import an existing GitLab repository into this project and retain the complete history on GitLab. The access token is encrypted and is never displayed again.
+								.alert.alert-warning The first import replaces the current files in this Overleaf project. Start with a blank project unless the replacement is intentional.
+								form(
+									method="post",
+									action=`/project/${project._id}/git/gitlab/connect`
+								)
+									input(name="_csrf", type="hidden", value=csrfToken)
+									.form-group
+										label.form-label(for="gitlab-remote-url") HTTPS repository URL
+										input#gitlab-remote-url.form-control(
+											type="url",
+											name="remoteUrl",
+											placeholder="https://gitlab.example.com/group/article.git",
+											required
+										)
+									.form-group
+										label.form-label(for="gitlab-branch") Branch
+										input#gitlab-branch.form-control(
+											name="branch",
+											value="master",
+											maxlength="200",
+											required
+										)
+									.form-group
+										label.form-label(for="gitlab-username") Git username
+										input#gitlab-username.form-control(
+											name="username",
+											value="oauth2",
+											maxlength="100",
+											required
+										)
+									.form-group
+										label.form-label(for="gitlab-token") Personal or project access token
+										input#gitlab-token.form-control(
+											type="password",
+											name="token",
+											autocomplete="new-password"
+										)
+										.form-text Leave empty only for a public repository. The token needs repository read access for Pull and write access for Push.
+									.form-check.mb-3
+										input#gitlab-confirm-import.form-check-input(
+											type="checkbox",
+											name="confirmImport",
+											value="yes",
+											required
+										)
+										label.form-check-label(for="gitlab-confirm-import") I understand that the initial import replaces the current project files
+									button.btn.btn-primary(type="submit") Connect and import

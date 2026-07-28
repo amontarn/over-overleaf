@@ -681,6 +681,11 @@ del.review-panel-content-highlight {
   padding: var(--spacing-01) var(--spacing-04);
 }
 
+.review-tooltip-community-ai-button {
+  padding: var(--spacing-01) var(--spacing-04);
+  white-space: nowrap;
+}
+
 .review-tooltip-menu-divider {
   width: 1px;
   background-color: #e7e9ee;

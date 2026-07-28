@@ -19,6 +19,9 @@ export default function RailHelpDropdown() {
   const openContactUsModal = useCallback(() => {
     setActiveModal('contact-us')
   }, [setActiveModal])
+  const openAboutModal = useCallback(() => {
+    setActiveModal('about-over-overleaf')
+  }, [setActiveModal])
 
   return (
     <DropdownMenu>
@@ -43,6 +46,8 @@ export default function RailHelpDropdown() {
           </DropdownItem>
         </>
       )}
+      <DropdownDivider />
+      <DropdownItem onClick={openAboutModal}>About</DropdownItem>
     </DropdownMenu>
   )
 }

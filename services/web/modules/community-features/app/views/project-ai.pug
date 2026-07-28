@@ -1,0 +1,161 @@
+extends ../../../../app/views/layout-marketing
+
+block vars
+	- metadata = metadata || {};
+
+block content
+	#main-content.content.content-alt
+		.container
+			.row
+				.col-lg-10.offset-lg-1
+					.card
+						.card-body
+							.page-header
+								h1 AI writing and LaTeX assistant
+								p
+									strong= project.name
+									|
+									| —
+									a(href=`/project/${project._id}`) Return to editor
+
+							#ai-status.alert.alert-info(role="status") Loading connector status…
+							.form-check.mb-3
+								input#ai-consent.form-check-input(type="checkbox")
+								label.form-check-label(for="ai-consent") I authorise this project to send data to the configured AI provider.
+							.form-group
+								label.form-label(for="ai-connector") Model
+								select#ai-connector.form-select
+
+							form#ai-assistant-form(
+								data-project-id=project._id.toString(),
+								data-csrf-token=csrfToken
+							)
+								.form-group
+									label.form-label(for="ai-action") Action
+									select#ai-action.form-select
+										option(value="improve") Improve writing
+										option(value="shorten") Make more concise
+										option(value="correct") Correct language and LaTeX
+										option(value="latex") Repair or improve LaTeX
+										option(value="custom") Custom instruction
+								.form-group
+									label.form-label(for="ai-instruction") Custom instruction
+									input#ai-instruction.form-control(type="text", maxlength="2000")
+								.form-group
+									label.form-label(for="ai-source") Selected LaTeX or prose
+									textarea#ai-source.form-control(
+										rows="12",
+										required,
+										maxlength="20000"
+									)
+								button#ai-submit.btn.btn-primary(type="submit") Generate proposal
+
+							hr
+							label.form-label(for="ai-proposal") Proposal
+							textarea#ai-proposal.form-control(rows="12", readonly)
+							button#ai-copy.btn.btn-secondary.mt-2(type="button") Copy proposal
+
+		script(nonce=scriptNonce).
+			(() => {
+				const form = document.getElementById("ai-assistant-form");
+				const status = document.getElementById("ai-status");
+				const consent = document.getElementById("ai-consent");
+				const connector = document.getElementById("ai-connector");
+				const submit = document.getElementById("ai-submit");
+				const proposal = document.getElementById("ai-proposal");
+				const csrf = form.dataset.csrfToken;
+				const projectId = form.dataset.projectId;
+
+				async function json(url, options = {}) {
+					const response = await fetch(url, options);
+					const body = await response.json().catch(() => ({}));
+					if (!response.ok) throw new Error(body.message || `HTTP ${response.status}`);
+					return body;
+				}
+
+				async function refreshStatus() {
+					const state = await json(`/project/${projectId}/ai/status`);
+					connector.replaceChildren(
+						...state.connectors.flatMap((item) =>
+							item.models.map((model) => {
+								const option = document.createElement("option");
+								option.value = JSON.stringify({ connectorId: item.id, model });
+								option.textContent = `${item.name} — ${model}`;
+								option.selected = item.id === state.selectedConnectorId && model === state.selectedModel;
+								return option;
+							}),
+						),
+					);
+					connector.disabled = !state.configured;
+					consent.checked = state.userEnabled;
+					status.dataset.providerOrigin = state.providerOrigin || "";
+					consent.disabled = !state.configured;
+					submit.disabled = !state.userEnabled;
+					status.className = `alert ${state.configured ? "alert-info" : "alert-warning"}`;
+					status.textContent = state.configured ? (state.userEnabled ? "AI is enabled for this project." : "AI is available. Authorise it explicitly for this project to continue.") : "The administrator has not configured an AI provider.";
+				}
+
+				connector.addEventListener("change", async () => {
+					try {
+						const selection = JSON.parse(connector.value);
+						await json(`/project/${projectId}/ai/connector`, {
+							method: "POST",
+							headers: { "content-type": "application/json", "x-csrf-token": csrf },
+							body: JSON.stringify({ ...selection, _csrf: csrf }),
+						});
+						proposal.value = "";
+						await refreshStatus();
+					} catch (error) {
+						status.textContent = error.message;
+					}
+				});
+
+				consent.addEventListener("change", async () => {
+					try {
+						if (consent.checked && !window.confirm(`Attention: your questions, selections and project context may be sent to ${status.dataset.providerOrigin || "the AI server configured by the administrator"}. Continue?`)) {
+							consent.checked = false;
+							return;
+						}
+						await json(`/project/${projectId}/ai/consent`, {
+							method: "POST",
+							headers: { "content-type": "application/json", "x-csrf-token": csrf },
+							body: JSON.stringify({ enabled: consent.checked, _csrf: csrf }),
+						});
+						await refreshStatus();
+					} catch (error) {
+						status.textContent = error.message;
+						consent.checked = !consent.checked;
+					}
+				});
+
+				form.addEventListener("submit", async (event) => {
+					event.preventDefault();
+					submit.disabled = true;
+					status.textContent = "Generating proposal…";
+					try {
+						const result = await json(`/project/${projectId}/ai/completion`, {
+							method: "POST",
+							headers: { "content-type": "application/json", "x-csrf-token": csrf },
+							body: JSON.stringify({
+								_csrf: csrf,
+								action: document.getElementById("ai-action").value,
+								instruction: document.getElementById("ai-instruction").value,
+								source: document.getElementById("ai-source").value,
+							}),
+						});
+						proposal.value = result.proposal;
+						status.textContent = `Proposal generated with ${result.model}. Review it before using it.`;
+					} catch (error) {
+						status.textContent = error.message;
+					} finally {
+						submit.disabled = !consent.checked;
+					}
+				});
+
+				document.getElementById("ai-copy").addEventListener("click", async () => {
+					await navigator.clipboard.writeText(proposal.value);
+				});
+				refreshStatus().catch((error) => {
+					status.textContent = error.message;
+				});
+			})();

@@ -5,6 +5,7 @@ import type {
 import OLRow from '@/shared/components/ol/ol-row'
 import LanguagePicker from '@/shared/components/language-picker'
 import React from 'react'
+import AboutOverOverleaf from './about-over-overleaf'
 
 function FooterItemLi({
   text,
@@ -79,6 +80,9 @@ function ThinFooter({
             {leftItems?.map(item => (
               <FooterItemLi key={item.text} {...item} />
             ))}
+            <li>
+              <AboutOverOverleaf />
+            </li>
           </ul>
           <ul className="site-footer-items col-lg-3 text-end">
             {rightItems?.map(item => (

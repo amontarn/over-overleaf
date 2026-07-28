@@ -1,0 +1,76 @@
+.community-git-integration-modal {
+  max-width: min(1200px, calc(100vw - 64px));
+
+  .modal-body {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+  }
+}
+
+.community-git-integration-body {
+  padding: var(--spacing-02) 0;
+
+  > label:not(.community-git-confirmation) {
+    display: block;
+    font-size: var(--font-size-01);
+    font-weight: 600;
+    margin: var(--spacing-03) 0 var(--spacing-01);
+  }
+
+  code {
+    overflow-wrap: anywhere;
+  }
+
+  h6 {
+    margin-top: var(--spacing-06);
+  }
+}
+
+.community-git-copy-row {
+  align-items: flex-start;
+  background: var(--integrations-panel-card-button-hover-background);
+  border-radius: var(--border-radius-medium);
+  display: flex;
+  gap: var(--spacing-02);
+  justify-content: space-between;
+  padding: var(--spacing-03);
+}
+
+.community-git-one-time-token {
+  display: block;
+  margin: var(--spacing-03) 0;
+  user-select: all;
+}
+
+.community-git-token-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    align-items: center;
+    border-top: 1px solid var(--integrations-panel-card-border);
+    display: flex;
+    gap: var(--spacing-02);
+    justify-content: space-between;
+    padding: var(--spacing-03) 0;
+  }
+
+  small {
+    display: block;
+    color: var(--integrations-panel-description-color);
+  }
+}
+
+.community-git-confirmation {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--spacing-02);
+  margin: var(--spacing-04) 0;
+}
+
+.community-git-integration-notice {
+  border-top: 1px solid var(--border-divider);
+  margin-top: var(--spacing-05);
+  padding-top: var(--spacing-03);
+}

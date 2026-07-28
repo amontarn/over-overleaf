@@ -1,0 +1,119 @@
+extends ../../../../app/views/layout-marketing
+
+block content
+	#main-content.content.content-alt
+		.container
+			.row
+				.col-md-10.col-md-offset-1
+					.card
+						.card-body
+							.page-header
+								h1 AI connectors
+								p Each server is tested through its OpenAI-compatible #[code /models] catalog. API keys are encrypted and are never sent to browsers.
+							if notice
+								.alert(class=`alert-${notice.type}`)= notice.message
+
+							h2 Configured servers
+							if connectors.length
+								.table-responsive
+									table.table.table-striped
+										thead
+											tr
+												th Server
+												th Available models
+												th Last test
+												th
+										tbody
+											each connector in connectors
+												tr
+												td
+													code= connector.baseUrl
+												td
+													each model in connector.models
+														code.d-block= model
+												td= connector.testedAt ? new Date(connector.testedAt).toLocaleString("en-US") : "—"
+												td.text-end
+												form.d-inline(
+													method="post",
+													action=`/admin/community/ai/${connector.id}/refresh`
+												)
+													input(name="_csrf", type="hidden", value=csrfToken)
+													button.btn.btn-secondary.btn-sm(type="submit") Refresh models
+												form.d-inline.ms-1(
+													method="post",
+													action=`/admin/community/ai/${connector.id}/delete`
+												)
+													input(name="_csrf", type="hidden", value=csrfToken)
+													button.btn.btn-danger.btn-sm(type="submit") Delete
+							else
+								p.text-muted No AI server is configured yet.
+
+							hr
+							h2 Test and add a server
+							p Access is validated and models are fetched automatically. You can refresh this list later.
+							form#ai-connector-form(method="post", action="/admin/community/ai")
+								input(name="_csrf", type="hidden", value=csrfToken)
+								.form-group
+									label.form-label(for="ai-base-url") API host or base URL
+									input#ai-base-url.form-control(
+										name="baseUrl",
+										type="url",
+										required,
+										placeholder="http://host.docker.internal:11434"
+									)
+									p.help-block The #[code /v1] path is added automatically if you enter only the host.
+								.form-group
+									label.form-label(for="ai-api-key") API key
+									input#ai-api-key.form-control(
+										name="apiKey",
+										type="password",
+										required,
+										autocomplete="new-password"
+									)
+								#ai-connector-form-result.alert.d-none(role="alert")
+								button#ai-connector-submit.btn.btn-primary(type="submit") Test and add
+								a.btn.btn-link(href="/admin#community-features") Back to administration
+
+		script(nonce=scriptNonce).
+			(() => {
+				const form = document.getElementById("ai-connector-form");
+				const submit = document.getElementById("ai-connector-submit");
+				const result = document.getElementById("ai-connector-form-result");
+				if (!form || !submit || !result) return;
+
+				const showResult = (type, message) => {
+					result.classList.remove("d-none", "alert-success", "alert-danger");
+					result.classList.add(`alert-${type}`);
+					result.textContent = message;
+				};
+
+				form.addEventListener("submit", async (event) => {
+					event.preventDefault();
+					result.classList.add("d-none");
+					submit.disabled = true;
+					submit.textContent = "Testing…";
+					try {
+						const response = await fetch(form.action, {
+							method: "POST",
+							credentials: "same-origin",
+							headers: {
+								accept: "application/json",
+								"content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+								"x-requested-with": "XMLHttpRequest",
+							},
+							body: new URLSearchParams(new FormData(form)),
+						});
+						const body = await response.json().catch(() => ({}));
+						if (!response.ok) {
+							throw new Error(body.message || `Test failed (HTTP ${response.status})`);
+						}
+						showResult("success", body.message || "Connector tested and added.");
+						window.setTimeout(() => window.location.reload(), 600);
+					} catch (error) {
+						showResult("danger", error.message || "The connector test failed.");
+					} finally {
+						submit.disabled = false;
+						submit.textContent = "Test and add";
+					}
+				});
+			})();

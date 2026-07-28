@@ -10,66 +10,7 @@ mixin ciamCardSeparator
 	hr.ciam-card-separator
 
 mixin ciamCardFooter(short)
-	section.ciam-card-footer
-		+ciamCardSeparator
-		.ciam-footer-ds-logo
-			a.ciam-image-link(
-				href='https://www.digital-science.com/'
-				target='_blank'
-				rel='noopener noreferrer'
-				event-tracking-mb='true'
-				event-tracking='unified-access-footer-click'
-				event-tracking-trigger='click'
-				event-segmentation={
-					product: 'overleaf',
-					item: 'logo',
-					destinationUrl: 'https://www.digital-science.com/',
-				}
-			)
-				img(
-					src=buildImgPath('digital-science/digital-science.svg')
-					alt='Digital Science — home'
-				)
-		p
-			if short
-				| !{translate('overleaf_is_a_ds_product')}
-			else
-				-
-					const linkArgs = [
-						{
-							name: 'a',
-							attrs: {
-								href: 'https://www.overleaf.com/',
-								target: '_blank',
-								rel: 'noopener noreferrer',
-								'event-tracking-mb': 'true',
-								'event-tracking': 'unified-access-footer-click',
-								'event-tracking-trigger': 'click',
-								'event-segmentation': {
-									product: 'overleaf',
-									item: 'overleaf',
-									destinationUrl: 'https://www.overleaf.com/'
-								}
-							}
-						},
-						{
-							name: 'a',
-							attrs: {
-								href: 'https://www.papersapp.com/',
-								target: '_blank',
-								rel: 'noopener noreferrer',
-								'event-tracking-mb': 'true',
-								'event-tracking': 'unified-access-footer-click',
-								'event-tracking-trigger': 'click',
-								'event-segmentation': {
-									product: 'overleaf',
-									item: 'papers',
-									destinationUrl: 'https://www.papersapp.com/'
-								}
-							}
-						}
-					]
-				| !{translate('advancing_research_with', null, linkArgs)}
+	//- Third-party co-branding intentionally omitted in Over-Overleaf.
 
 mixin ciamTermsOfServiceAgreement
 	p

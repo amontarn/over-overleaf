@@ -2,8 +2,8 @@ import { useTranslation, Trans } from 'react-i18next'
 import OLRow from '@/shared/components/ol/ol-row'
 import OLCol from '@/shared/components/ol/ol-col'
 import OLButton from '@/shared/components/ol/ol-button'
-import overleafLogo from '@/shared/svgs/overleaf-logo.svg'
 import getMeta from '@/utils/meta'
+import { OVER_OVERLEAF_LOGO_URL } from '@/shared/utils/branding'
 
 type InviteNotValidProps = {
   email?: string
@@ -18,7 +18,7 @@ function InviteNotValid({ email }: InviteNotValidProps) {
       <OLRow>
         <OLCol lg={{ span: 6, offset: 3 }}>
           <div className="project-join-container">
-            <img src={overleafLogo} alt={appName} />
+            <img src={OVER_OVERLEAF_LOGO_URL} alt={appName} />
             <h1 className="h4 mb-2">
               {t('sorry_this_project_is_not_available')}
             </h1>
